@@ -12,6 +12,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STAGING="$ROOT/src-tauri/tools-staging"
 mkdir -p "$STAGING"
 
+export HOMEBREW_NO_AUTO_UPDATE=1
+
 brew list dylibbundler >/dev/null 2>&1 || brew install dylibbundler
 brew install ffmpeg qpdf gifsicle
 
@@ -27,9 +29,23 @@ for f in ffmpeg qpdf gifsicle; do otool -L "$STAGING/$f"; done
 # -od: wipe+recreate the libs dir; -b: copy+fix bundled dylibs (incl.
 # transitive deps); -x (repeatable): fix each executable's own references.
 # -p matches our flat layout (libs/ sits next to the exes, not in ../libs).
+# -s: search paths for deps linked via @rpath (e.g. qpdf's CLI links its own
+# libqpdf.30.dylib this way, not by absolute path) — without these,
+# dylibbundler can't resolve them and drops into an interactive "specify the
+# directory" prompt that, against CI's non-interactive stdin, spins in a
+# tight infinite retry loop rather than actually blocking (confirmed: it
+# burned 30+ min before being canceled). `< /dev/null` just makes that
+# input-is-never-available assumption explicit; it does NOT bound the loop
+# if some *other* @rpath ever slips past these search paths — that's what
+# the job-level `timeout-minutes` in release.yml is for.
 dylibbundler -od -b \
   -x "$STAGING/ffmpeg" -x "$STAGING/qpdf" -x "$STAGING/gifsicle" \
-  -d "$STAGING/libs" -p "@executable_path/libs/"
+  -d "$STAGING/libs" -p "@executable_path/libs/" \
+  -s "/opt/homebrew/lib" \
+  -s "$(brew --prefix qpdf)/lib" \
+  -s "$(brew --prefix ffmpeg)/lib" \
+  -s "$(brew --prefix gifsicle)/lib" \
+  < /dev/null
 
 # dylibbundler ad-hoc signs by default, but install_name_tool invalidates
 # signatures on every rewrite it does — re-sign explicitly as insurance.
