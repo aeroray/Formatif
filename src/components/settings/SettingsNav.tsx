@@ -1,5 +1,5 @@
 import type { ComponentType } from "react"
-import { FolderSync, Info, Palette, Settings, SlidersHorizontal, Wrench } from "lucide-react"
+import { FolderSync, Info, Palette, Settings, SlidersHorizontal } from "lucide-react"
 import type { SettingsSection } from "@/types"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/store/store"
@@ -13,7 +13,6 @@ const ITEMS: Item[] = [
   { id: "media", label: "prefs.nav.media", icon: SlidersHorizontal },
   { id: "monitor", label: "prefs.nav.monitor", icon: FolderSync },
   { id: "appearance", label: "prefs.nav.appearance", icon: Palette },
-  { id: "extensions", label: "prefs.nav.extensions", icon: Wrench },
   { id: "about", label: "prefs.nav.about", icon: Info },
 ]
 

@@ -12,7 +12,6 @@ import type {
   RunSummary,
   SettingsSection,
   Theme,
-  ToolStatus,
   TypeSettings,
 } from "@/types"
 import { defaultTypeSettings } from "@/lib/compress"
@@ -433,8 +432,6 @@ interface AppStore {
   running: boolean
   runStartMs: number
   runSummary?: RunSummary
-  tools: ToolStatus[]
-  toolsLoaded: boolean
   filePanelId: string | null
 
   setView: (view: AppView) => void
@@ -455,9 +452,6 @@ interface AppStore {
 
   startRun: () => void
   finishRun: (summary: RunSummary) => void
-
-  applyTools: (tools: ToolStatus[]) => void
-  updateTool: (id: string, patch: Partial<ToolStatus>) => void
 }
 
 export const useAppStore = create<AppStore>()((set, get) => ({
@@ -467,8 +461,6 @@ export const useAppStore = create<AppStore>()((set, get) => ({
   running: false,
   runStartMs: 0,
   runSummary: undefined,
-  tools: [],
-  toolsLoaded: false,
   filePanelId: null,
 
   setView: (view) => set({ view }),
@@ -535,10 +527,4 @@ export const useAppStore = create<AppStore>()((set, get) => ({
 
   startRun: () => set({ running: true, runStartMs: Date.now(), runSummary: undefined }),
   finishRun: (runSummary) => set({ running: false, runSummary }),
-
-  applyTools: (tools) => set({ tools, toolsLoaded: true }),
-  updateTool: (id, patch) =>
-    set((s) => ({
-      tools: s.tools.map((t) => (t.id === id ? { ...t, ...patch } : t)),
-    })),
 }))

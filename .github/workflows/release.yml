@@ -17,12 +17,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: windows-latest
-            args: ""
-          # Universal binary (Apple Silicon + Intel) — one .dmg for every Mac.
-          - platform: macos-latest
-            args: "--target universal-apple-darwin"
+        # Apple Silicon only — no Intel Mac build (see stage-tools-macos.sh;
+        # Homebrew has no official prebuilt binaries for qpdf/gifsicle on any
+        # platform, and getting an x86_64 copy too would need a Rosetta-
+        # assisted dual Homebrew install on the arm64 runner).
+        platform: [windows-latest, macos-latest]
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -38,14 +37,24 @@ jobs:
           cache: pnpm
 
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
 
       - run: pnpm install --frozen-lockfile
+
+      # Stage ffmpeg/qpdf/gifsicle into src-tauri/tools-staging/ so Tauri
+      # bundles them (see tauri.conf.json's "resources") — nothing is
+      # downloaded by the app itself at runtime anymore.
+      - name: Stage tools (Windows)
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: ./scripts/stage-tools-windows.ps1
+
+      - name: Stage tools (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: bash scripts/stage-tools-macos.sh
 
       # No Apple Developer certificate yet, so macOS output is unsigned (fine
       # to build and distribute, just shows an "unidentified developer"
@@ -77,4 +86,3 @@ jobs:
           prerelease: false
           generateReleaseNotes: true
           uploadUpdaterJson: false
-          args: ${{ matrix.args }}

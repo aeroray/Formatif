@@ -24,9 +24,8 @@ device: no uploads, no account, no network needed for compression.
 ## Features
 
 - **Free & open source (MIT)** — no license key, no paywall, no telemetry.
-- **Tiny installer (~4 MB)** — the heavy tools (ffmpeg, qpdf, gifsicle)
-**download on first use** instead of being bundled, so the installer stays
-small.
+- **Everything included** — ffmpeg, qpdf and gifsicle are bundled in the
+installer; nothing downloads on first run.
 - **Private by design** — files never leave your machine.
 - **Batch** — drop files *or whole folders*; compress them all in parallel.
 - **Folder monitoring** — watch folders and auto-compress anything dropped
@@ -57,9 +56,9 @@ developer."* After moving `Formatif.app` into `/Applications`, either:
 
 - **Tauri 2** (Rust) shell + **React 19 + TypeScript + Vite** frontend
 - **shadcn/ui** (Tailwind v4, Radix) + **zustand**
-- External CLI tools, **downloaded on demand** (not bundled): **ffmpeg**
+- External CLI tools, **bundled in the installer**: **ffmpeg**
 (image/video/gif), **qpdf** (PDF structure), **gifsicle** (GIF lossy
-optimization). Managed in Settings → Tools.
+optimization).
 
 
 
@@ -96,27 +95,30 @@ common legacy video containers (MPG, TS, M2TS, 3G2, OGV) are also accepted.
 
 
 
-## Downloaded tools
+## Bundled tools
 
-Formatif never bundles ffmpeg. On the first compression that needs it, it
-downloads the required tool into a `tools/` folder **next to the installed
-executable** (not app-data):
+ffmpeg, qpdf and gifsicle ship inside the installer — nothing is downloaded at
+runtime:
 
-- **ffmpeg** — gyan.dev release-essentials (image/video/gif/audio)
-- **qpdf** — official GitHub release (PDF)
-- **gifsicle** — eternallybored Windows build (GIF lossy optimization)
+- **ffmpeg** — gyan.dev release-essentials on Windows (image/video/gif/audio)
+- **qpdf** — official release on Windows; Homebrew bottle on macOS
+- **gifsicle** — eternallybored build on Windows; Homebrew bottle on macOS
+  (GIF lossy optimization)
 
-Manage them in **Settings → Tools** (install size + reinstall). A small
-transient `cache/` folder (also next to the executable) is used for
-decode/rasterize scratch work and is wiped on every launch and exit. During
-development the ffmpeg on your `PATH` is used; override any tool with
-`FORMATIF_<TOOL>` (e.g. `FORMATIF_FFMPEG`).
+They're staged into `src-tauri/tools-staging/` at build time — see
+`scripts/stage-tools-windows.ps1` / `scripts/stage-tools-macos.sh` — and
+installed next to the app executable. A small transient `cache/` folder (also
+next to the executable) is used for decode/rasterize scratch work and is
+wiped on every launch and exit. During development the ffmpeg on your `PATH`
+is used instead of a staged copy; override any tool with `FORMATIF_<TOOL>`
+(e.g. `FORMATIF_FFMPEG`).
 
 > ffmpeg's "essentials" build and gifsicle are GPL-licensed; qpdf is
-> Apache-2.0. Because they're downloaded by the user at runtime rather than
-> redistributed in the installer, Formatif's own installer and source tree
-> ship no GPL binaries — but that license still applies to the tool itself if
-> you redistribute a build that includes it.
+> Apache-2.0. They're bundled as separate executables invoked as subprocesses
+> (not linked into Formatif's own code), which is the "mere aggregation" GPL
+> explicitly allows — but the installer does now contain GPL-licensed
+> binaries. Formatif's own code stays [MIT](LICENSE); the bundled tools remain
+> under their own licenses.
 
 
 
@@ -154,7 +156,8 @@ pnpm tauri build
 ```
 
 Output → `src-tauri/target/release/bundle/nsis/Formatif_<version>_x64-setup.exe`
-(~4 MB — no bundled tools).
+(~34 MB, with ffmpeg/qpdf/gifsicle bundled — `mise run build` stages them
+first automatically).
 
 ## Project structure
 
@@ -166,7 +169,7 @@ src/
     sidebar/              preset header, output card, per-type settings
     compression/          shared CompressionControls (sidebar + per-file)
     file-panel/           per-file override drawer
-    settings/             settings nav + panels (incl. Tools tool manager)
+    settings/             settings nav + panels
   hooks/                  drag & drop, file ingest, compression run loop
   store/store.ts          zustand: useSettingsStore (persisted) + useAppStore
   lib/compress.ts         category/format metadata + helpers
@@ -174,7 +177,7 @@ src/
   lib/decode.ts           HEIC/PSD/SVG → PNG decode (webview-side)
   lib/tauri.ts            command + event wrappers
 src-tauri/src/
-  tools.rs                download-on-demand tool manager (ffmpeg, qpdf, gifsicle)
+  tools.rs                resolves bundled tool paths (ffmpeg, qpdf, gifsicle)
   args.rs                 ffmpeg arg builder per category × format × quality
   commands.rs             compress pipeline, thumbnails, file expansion
   ffmpeg.rs               transcode core (progress + cancel)
@@ -186,9 +189,9 @@ src-tauri/src/
 
 ## Roadmap
 
-- Specialized optimizers (oxipng) wired through the tool manager.
+- Specialized optimizers (oxipng).
 - HEIC/HEIF input, "Target size" mode, clipboard output, jobs history.
-- macOS build.
+- Code-signed & notarized macOS build; Intel Mac support.
 
 
 

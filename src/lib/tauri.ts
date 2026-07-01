@@ -22,8 +22,6 @@ import type {
   ErrorPayload,
   FsEntry,
   ProgressPayload,
-  ToolProgressPayload,
-  ToolStatus,
   WatchConfig,
   WatchDonePayload,
 } from "@/types"
@@ -97,25 +95,6 @@ export function writeTemp(bytes: Uint8Array, name: string) {
   return invoke<string>("write_temp", { bytes: Array.from(bytes), name })
 }
 
-// ---- tool manager ----
-
-export function toolStatus() {
-  return invoke<ToolStatus[]>("tool_status")
-}
-
-export function installTool(id: string) {
-  return invoke<void>("install_tool", { id })
-}
-
-export function reinstallTool(id: string) {
-  return invoke<void>("reinstall_tool", { id })
-}
-
-/** Ensure the tools required for the given categories are installed. */
-export function ensureTools(categories: string[]) {
-  return invoke<boolean>("ensure_tools", { categories })
-}
-
 export function getLaunchAtLogin() {
   return isAutostartEnabled()
 }
@@ -173,12 +152,6 @@ export function onError(cb: (p: ErrorPayload) => void): Promise<UnlistenFn> {
 
 export function onCanceled(cb: (p: CanceledPayload) => void): Promise<UnlistenFn> {
   return listen<CanceledPayload>("compress://canceled", (e) => cb(e.payload))
-}
-
-export function onToolProgress(
-  cb: (p: ToolProgressPayload) => void
-): Promise<UnlistenFn> {
-  return listen<ToolProgressPayload>("tool://progress", (e) => cb(e.payload))
 }
 
 export function onWatchCompressed(

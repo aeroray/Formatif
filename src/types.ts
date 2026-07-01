@@ -25,7 +25,6 @@ export type SettingsSection =
   | "media"
   | "monitor"
   | "appearance"
-  | "extensions"
   | "about"
 
 export type QualityPreset = "original" | "balanced" | "high" | "medium" | "low"
@@ -101,23 +100,6 @@ export interface RunSummary {
   spentMs: number
 }
 
-// ---- Tool manager ----
-
-export type ToolState = "installed" | "missing" | "installing" | "error"
-
-export interface ToolStatus {
-  id: string
-  name: string
-  state: ToolState
-  sizeBytes?: number
-  version?: string
-  percent?: number
-  optional?: boolean
-  error?: string
-  url?: string // download source
-  installPath?: string // where it's installed (when present)
-}
-
 // ---- Backend (Rust) command / event contract ----
 
 export interface CompressJob {
@@ -158,13 +140,6 @@ export interface ErrorPayload {
 
 export interface CanceledPayload {
   id: string
-}
-
-export interface ToolProgressPayload {
-  id: string
-  received: number
-  total: number
-  state: ToolState
 }
 
 export interface WatchDonePayload {

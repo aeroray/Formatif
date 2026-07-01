@@ -5,7 +5,6 @@ import { GeneralPanel } from "@/components/settings/panels/GeneralPanel"
 import { MediaPanel } from "@/components/settings/panels/MediaPanel"
 import { MonitoringPanel } from "@/components/settings/panels/MonitoringPanel"
 import { AppearancePanel } from "@/components/settings/panels/AppearancePanel"
-import { ExtensionsPanel } from "@/components/settings/panels/ExtensionsPanel"
 import { AboutPanel } from "@/components/settings/panels/AboutPanel"
 
 // The back button + "Formatif · Settings" title live in the TitleBar.
@@ -21,7 +20,6 @@ export function SettingsView() {
           {section === "media" && <MediaPanel />}
           {section === "monitor" && <MonitoringPanel />}
           {section === "appearance" && <AppearancePanel />}
-          {section === "extensions" && <ExtensionsPanel />}
           {section === "about" && <AboutPanel />}
         </div>
       </ScrollArea>

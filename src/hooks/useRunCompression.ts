@@ -2,7 +2,7 @@ import { useCallback } from "react"
 import { toast } from "sonner"
 import type { CompressJob } from "@/types"
 import { useAppStore, useSettingsStore } from "@/store/store"
-import { compress, ensureTools, isTauri, writeTemp } from "@/lib/tauri"
+import { compress, isTauri, writeTemp } from "@/lib/tauri"
 import { tx } from "@/lib/i18n"
 import { decodeToPng, needsDecode } from "@/lib/decode"
 import { compressPdf } from "@/lib/pdf"
@@ -21,24 +21,6 @@ export function useRunCompression() {
     const targets = app.files.filter((f) => PENDING.has(f.status))
     if (targets.length === 0) return
 
-    // Show the loading state immediately (covers tool download time too).
-    app.startRun()
-
-    // Make sure the tools for these categories are present (downloads once).
-    const categories = [...new Set(targets.map((f) => f.category))]
-    let ready = false
-    try {
-      ready = await ensureTools(categories)
-    } catch {
-      ready = false
-    }
-    if (!ready) {
-      app.finishRun({ count: 0, savedBytes: 0, savedPct: 0, spentMs: 0 })
-      toast.error(tx("toast.toolMissing", { name: "ffmpeg" }))
-      return
-    }
-
-    // Reset the timer after any download so "spent" reflects compression only.
     app.startRun()
     targets.forEach((f) =>
       app.updateFile(f.id, {

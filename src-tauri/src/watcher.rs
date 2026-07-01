@@ -377,9 +377,9 @@ async fn compress_one(
         // fs::copy returns the byte count, which is the output size.
         std::fs::copy(&input_str, &output_str).map_err(|e| anyhow!(e.to_string()))
     } else if category == "pdf" {
-        run_qpdf(&input_str, &output_str, &spec).await
+        run_qpdf(&app, &input_str, &output_str, &spec).await
     } else {
-        let ffmpeg = resolve_tool("ffmpeg");
+        let ffmpeg = resolve_tool(&app, "ffmpeg");
         let total = ffmpeg::probe_duration(&ffmpeg, &input_str).await.unwrap_or(0.0);
         // Cap video bitrate below the source (computed from size + duration).
         let src_kbps = if category == "video" && spec.quality != "original" && total > 0.5 {
@@ -428,8 +428,8 @@ async fn compress_one(
 }
 
 /// qpdf lossless recompression (mirrors the interactive path, minus events).
-async fn run_qpdf(input: &str, output: &str, spec: &CompressionSpec) -> Result<u64> {
-    let qpdf = resolve_tool("qpdf");
+async fn run_qpdf(app: &AppHandle, input: &str, output: &str, spec: &CompressionSpec) -> Result<u64> {
+    let qpdf = resolve_tool(app, "qpdf");
     let mut args: Vec<String> = vec![
         "--object-streams=generate".into(),
         "--recompress-flate".into(),

@@ -193,7 +193,7 @@ fn spawn_compress(app: AppHandle, job: CompressJob) {
         } else if job.category == "pdf" {
             run_qpdf(&app, &job, &output_str).await
         } else {
-            let ffmpeg = resolve_tool("ffmpeg");
+            let ffmpeg = resolve_tool(&app, "ffmpeg");
             // For video, probe the source bitrate so the encoder can cap below it.
             let src_kbps = source_kbps(&ffmpeg, &job.category, &job.spec.quality, &job.input).await;
             let out_args = build_args(&job.category, &job.spec, &input_ext, src_kbps);
@@ -218,7 +218,7 @@ fn spawn_compress(app: AppHandle, job: CompressJob) {
                 // lossy + -O3 in place. Best-effort: keep ffmpeg's output if
                 // gifsicle is missing or fails.
                 let size = if ext == "gif" && job.spec.quality != "original" {
-                    optimize_gif(&job.spec.quality, &output_str).await.unwrap_or(size)
+                    optimize_gif(&app, &job.spec.quality, &output_str).await.unwrap_or(size)
                 } else {
                     size
                 };
@@ -265,8 +265,8 @@ fn spawn_compress(app: AppHandle, job: CompressJob) {
     });
 }
 
-async fn run_qpdf(_app: &AppHandle, job: &CompressJob, output: &str) -> Result<u64> {
-    let qpdf = resolve_tool("qpdf");
+async fn run_qpdf(app: &AppHandle, job: &CompressJob, output: &str) -> Result<u64> {
+    let qpdf = resolve_tool(app, "qpdf");
     let mut args: Vec<String> = vec![
         "--object-streams=generate".into(),
         "--recompress-flate".into(),
@@ -298,8 +298,8 @@ async fn run_qpdf(_app: &AppHandle, job: &CompressJob, output: &str) -> Result<u
 /// (and usually grows it); gifsicle's `--lossy` is what actually compresses.
 /// Returns the new size, or `None` if gifsicle is missing/failed (caller then
 /// keeps whatever ffmpeg produced).
-async fn optimize_gif(quality: &str, path: &str) -> Option<u64> {
-    let gifsicle = resolve_tool("gifsicle");
+async fn optimize_gif(app: &AppHandle, quality: &str, path: &str) -> Option<u64> {
+    let gifsicle = resolve_tool(app, "gifsicle");
     // Higher lossiness = smaller file, more speckle. With dither=none upstream
     // the result stays clean: balanced lands near 60% of the source at SSIM
     // ~0.96 (vs. ~0.79 for the old bayer+lossy path).
@@ -442,8 +442,8 @@ pub fn cancel_all(app: AppHandle) {
 
 /// Generate a small preview thumbnail (data: URL) via ffmpeg. Empty on failure.
 #[tauri::command]
-pub async fn thumbnail(_app: AppHandle, path: String, max_px: Option<u32>) -> Result<String, String> {
-    let ffmpeg = resolve_tool("ffmpeg");
+pub async fn thumbnail(app: AppHandle, path: String, max_px: Option<u32>) -> Result<String, String> {
+    let ffmpeg = resolve_tool(&app, "ffmpeg");
     let max = max_px.unwrap_or(256);
     let ext = ext_of(&path);
 

@@ -1,6 +1,6 @@
 //! FFmpeg invocation: duration probing and a compression runner that streams
 //! progress and supports cancellation. The ffmpeg binary path is resolved by
-//! `crate::tools::resolve_tool("ffmpeg")` (downloaded into app-data, or PATH in dev).
+//! `crate::tools::resolve_tool()` (bundled resource, or PATH in dev).
 
 use std::collections::VecDeque;
 use std::process::Stdio;

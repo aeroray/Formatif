@@ -9,12 +9,10 @@ import {
   onDone,
   onError,
   onProgress,
-  onToolProgress,
   onWatchCompressed,
   notify,
   setPreventSleep,
   thumbnail,
-  toolStatus,
   updateWatcher,
 } from "@/lib/tauri"
 import { pdfPageDataUrl } from "@/lib/pdf"
@@ -62,13 +60,6 @@ async function notifyRunComplete(summary: RunSummary) {
   } catch {
     // Notification support depends on the host WebView; toasts still show status.
   }
-}
-
-function refreshTools() {
-  if (!isTauri) return
-  toolStatus()
-    .then((list) => useAppStore.getState().applyTools(list))
-    .catch(() => {})
 }
 
 export default function App() {
@@ -122,10 +113,9 @@ export default function App() {
     return () => document.removeEventListener("contextmenu", onContextMenu)
   }, [])
 
-  // Subscribe to compression + tool events (desktop only).
+  // Subscribe to compression events (desktop only).
   useEffect(() => {
     if (!isTauri) return
-    refreshTools()
 
     const subs = Promise.all([
       onProgress((p) =>
@@ -168,13 +158,6 @@ export default function App() {
       onCanceled((p) => {
         useAppStore.getState().updateFile(p.id, { status: "canceled" })
         maybeFinishRun()
-      }),
-      onToolProgress((p) => {
-        useAppStore.getState().updateTool(p.id, {
-          state: p.state,
-          percent: p.total > 0 ? Math.round((p.received / p.total) * 100) : 0,
-        })
-        if (p.state === "installed" || p.state === "error") refreshTools()
       }),
       onWatchCompressed((p) => {
         const pct =

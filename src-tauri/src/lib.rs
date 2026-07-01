@@ -35,10 +35,6 @@ pub fn run() {
             commands::write_temp,
             commands::set_prevent_sleep,
             watcher::update_watcher,
-            tools::tool_status,
-            tools::install_tool,
-            tools::reinstall_tool,
-            tools::ensure_tools,
         ])
         .setup(|app| {
             // The frosted-glass look is done entirely in CSS (backdrop-filter),

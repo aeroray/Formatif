@@ -24,8 +24,14 @@ run = "pnpm tauri dev"
 description = "Run the Vite dev server only (browser preview, no desktop window)"
 run = "pnpm dev"
 
+[tasks.stage-tools]
+description = "Stage ffmpeg/qpdf/gifsicle into src-tauri/tools-staging for bundling"
+shell = "powershell -NoProfile -Command"
+run = "./scripts/stage-tools-windows.ps1"
+
 [tasks.build]
-description = "Build the Windows installer (NSIS)"
+description = "Build the Windows installer (NSIS), with ffmpeg/qpdf/gifsicle bundled"
+depends = ["stage-tools"]
 run = "pnpm tauri build"
 
 [tasks.check]
