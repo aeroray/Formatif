@@ -63,6 +63,16 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Formatif ${{ github.ref_name }}"
+          # Prepended to the auto-generated notes below. Remove once macOS
+          # builds are code-signed (see the comment above this step).
+          releaseBody: |
+            ## macOS: first launch
+
+            This build isn't code-signed yet, so Gatekeeper blocks it on first launch. After moving `Formatif.app` to `/Applications`, either right-click it → **Open** → confirm, or run once in Terminal:
+
+            ```sh
+            xattr -rd com.apple.quarantine /Applications/Formatif.app
+            ```
           releaseDraft: true
           prerelease: false
           generateReleaseNotes: true

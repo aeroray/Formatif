@@ -2,7 +2,7 @@
 
 # Formatif
 
-**Free, open-source, and 100% local media compression for Windows.**
+**Free, open-source, and 100% local media compression for Windows and macOS.**
 
 Compress images, video, GIFs and PDFs on your own machine — no uploads, no
 account, no subscription.
@@ -38,7 +38,20 @@ video, GIF and PDF.
 - **Dark, focused UI** with 7 accent colors, bilingual (English & 简体中文,
 auto-selected from your system language).
 
+## Installing on macOS
 
+The macOS build isn't code-signed yet (no Apple Developer certificate), so
+macOS quarantines it after download and blocks the first launch with
+something like *"Formatif can't be opened because it is from an unidentified
+developer."* After moving `Formatif.app` into `/Applications`, either:
+
+- Right-click (or Control-click) `Formatif.app` → **Open** → confirm **Open**
+  in the dialog, **or**
+- Run this once in Terminal:
+
+  ```sh
+  xattr -rd com.apple.quarantine /Applications/Formatif.app
+  ```
 
 ## Tech stack
 
