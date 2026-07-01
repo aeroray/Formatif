@@ -33,7 +33,7 @@ export const isTauri =
 
 // Mirrors tauri.conf.json / package.json — used only outside the desktop
 // runtime (browser preview), where there's no app bundle to ask.
-const PREVIEW_VERSION_FALLBACK = "0.1.0"
+const PREVIEW_VERSION_FALLBACK = "1.0.0"
 
 export function getAppVersion(): Promise<string> {
   return isTauri ? getVersion() : Promise.resolve(PREVIEW_VERSION_FALLBACK)
