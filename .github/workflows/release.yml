@@ -47,18 +47,19 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # No Apple Developer certificate yet, so macOS output is unsigned (fine
+      # to build and distribute, just shows an "unidentified developer"
+      # Gatekeeper prompt on first launch). To sign once you have one, add
+      # APPLE_CERTIFICATE / APPLE_CERTIFICATE_PASSWORD / APPLE_SIGNING_IDENTITY
+      # / APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID as repo secrets and pass
+      # them through here as env vars — but only when they're actually set:
+      # tauri-bundler treats a *present-but-empty* APPLE_CERTIFICATE env var
+      # as "try to sign with this", not "skip signing", so referencing an
+      # unset secret directly (e.g. `${{ secrets.APPLE_CERTIFICATE }}`) breaks
+      # the build rather than no-op'ing.
       - uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Optional macOS code signing / notarization — only takes effect if
-          # these secrets are actually set on the repo; harmless no-op
-          # (unsigned build) otherwise. Not needed to build or release.
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Formatif ${{ github.ref_name }}"
