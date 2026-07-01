@@ -1,0 +1,4 @@
+# core-js ships a (harmless) postinstall donation message. We acknowledge it as
+# not-built so `pnpm install` doesn't fail with ERR_PNPM_IGNORED_BUILDS.
+allowBuilds:
+  core-js: false

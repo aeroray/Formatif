@@ -1,0 +1,65 @@
+# Formatif development toolchain, managed by mise (https://mise.jdx.dev).
+# Run `mise install` to provision the pinned tools, then use the shortcuts
+# below via `mise run <task>` (`mise tasks` lists them all).
+#
+# Rust is intentionally not pinned here so it uses your system rustup toolchain
+# (cargo/rustc on PATH). FFmpeg is provided by mise during development; release
+# builds do NOT bundle it — the app downloads ffmpeg/qpdf on first use into
+# app-data (see src-tauri/src/tools.rs).
+
+[tools]
+node = "26.3.0"
+pnpm = "11.5.0"
+ffmpeg = "latest"
+
+# ---------------------------------------------------------------------------
+# Tasks — run with `mise run <name>`.
+# ---------------------------------------------------------------------------
+
+[tasks.dev]
+description = "Run the desktop app (Tauri dev: Vite + Rust, hot reload)"
+run = "pnpm tauri dev"
+
+[tasks.web]
+description = "Run the Vite dev server only (browser preview, no desktop window)"
+run = "pnpm dev"
+
+[tasks.build]
+description = "Build the Windows installer (NSIS)"
+run = "pnpm tauri build"
+
+[tasks.check]
+description = "Type-check the frontend (tsc, no emit)"
+run = "pnpm exec tsc -b"
+
+[tasks.lint]
+description = "Lint the frontend with ESLint"
+run = "pnpm lint"
+
+[tasks.test]
+description = "Run the Rust unit tests"
+run = "cargo test --manifest-path src-tauri/Cargo.toml"
+
+[tasks.clippy]
+description = "Lint the Rust backend with clippy"
+run = "cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets"
+
+[tasks.fmt]
+description = "Format the Rust backend (cargo fmt)"
+run = "cargo fmt --manifest-path src-tauri/Cargo.toml"
+
+# Stop a stale dev app and free port 5173 — the usual fix for the
+# "failed to remove formatif.exe / port 5173 in use" relaunch errors.
+[tasks.kill]
+description = "Stop a stale dev app and free port 5173 (Windows)"
+shell = "powershell -NoProfile -Command"
+run = "Get-Process formatif -ErrorAction SilentlyContinue | Stop-Process -Force; try { Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction Stop | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } } catch {}; Write-Output 'port 5173 freed'"
+
+[tasks.redev]
+description = "Kill any stale dev app + free 5173, then run Tauri dev"
+depends = ["kill"]
+run = "pnpm tauri dev"
+
+[tasks.verify]
+description = "Type-check the frontend + run the Rust tests"
+depends = ["check", "test"]
