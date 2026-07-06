@@ -17,7 +17,7 @@ No uploads. No account. No subscription. Everything runs on your own machine.
 
 ### [⬇ Download the latest release](https://github.com/aeroray/Formatif/releases/latest)
 
-<img src=".github/assets/app-preview.svg" width="760" alt="Formatif compressing a batch of images, video, GIF and PDF files">
+<img src="docs/assets/shot-preview.webp" width="760" alt="Formatif compressing a batch of images, video, GIF and PDF files">
 </div>
 
 ## Contents

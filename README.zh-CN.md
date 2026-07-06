@@ -17,7 +17,7 @@
 
 ### [⬇ 下载最新版本](https://github.com/aeroray/Formatif/releases/latest)
 
-<img src=".github/assets/app-preview.svg" width="760" alt="Formatif 正在批量压缩图片、视频、GIF 和 PDF 文件">
+<img src="docs/assets/shot-preview.webp" width="760" alt="Formatif 正在批量压缩图片、视频、GIF 和 PDF 文件">
 </div>
 
 ## 目录
