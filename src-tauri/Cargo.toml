@@ -4,7 +4,7 @@ name = "formatif"
 # this isn't the source of truth — package.json is (tauri.conf.json's
 # "version" points there); bump it too when cutting a release, but nothing
 # reads this field at runtime.
-version = "1.1.0"
+version = "1.1.1"
 description = "Formatif — lightweight, local media compression for images, video, GIF and PDF"
 authors = ["Formatif"]
 license = "MIT"
