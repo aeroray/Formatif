@@ -4,25 +4,63 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formatif — free, open-source, local media compression</title>
-<meta name="description" content="Compress images, video, GIFs and PDFs — free, open source, 100% local. No uploads, no account, no subscription.">
+<meta name="description" data-i18n-attr="content:meta.desc" content="Compress images, video, GIFs and PDFs — free, open source, 100% local. No uploads, no account, no subscription.">
 <link rel="icon" href="assets/logo.png">
+<script>
+  // Resolve theme before first paint to avoid a flash.
+  (function () {
+    try {
+      var saved = localStorage.getItem("formatif-theme");
+      var theme = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+      document.documentElement.setAttribute("data-theme", theme);
+    } catch (e) {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  })();
+</script>
 <style>
   :root {
+    --primary: #9362f4;
+    --primary-fg: #ffffff;
+    --emerald: #34d399;
+    --radius: 16px;
+    --maxw: 1140px;
+  }
+  [data-theme="dark"] {
     --bg: #0d0d12;
-    --bg-alt: #101015;
+    --bg-alt: #101016;
     --card: #17171c;
     --card-hover: #1c1c22;
     --secondary: #222227;
     --border: rgba(255,255,255,0.08);
-    --border-strong: rgba(255,255,255,0.14);
+    --border-strong: rgba(255,255,255,0.15);
     --fg: #f5f5f5;
+    --fg-soft: #d6d6dd;
     --muted: #9d9da6;
-    --primary: #9362f4;
     --primary-hover: #a377f6;
-    --primary-soft: rgba(147,98,244,0.14);
-    --emerald: #34d399;
-    --radius: 16px;
-    --maxw: 1120px;
+    --primary-soft: rgba(147,98,244,0.15);
+    --nav-bg: rgba(13,13,18,0.82);
+    --glow: rgba(147,98,244,0.30);
+    --shot-shadow: 0 30px 70px rgba(0,0,0,0.55);
+    --card-shadow: none;
+  }
+  [data-theme="light"] {
+    --bg: #ffffff;
+    --bg-alt: #f6f6fb;
+    --card: #ffffff;
+    --card-hover: #fafaff;
+    --secondary: #f0f0f6;
+    --border: rgba(20,20,32,0.10);
+    --border-strong: rgba(20,20,32,0.18);
+    --fg: #14141a;
+    --fg-soft: #2c2c38;
+    --muted: #63636f;
+    --primary-hover: #7c3aed;
+    --primary-soft: rgba(124,58,237,0.10);
+    --nav-bg: rgba(255,255,255,0.82);
+    --glow: rgba(147,98,244,0.20);
+    --shot-shadow: 0 24px 60px rgba(20,20,40,0.16);
+    --card-shadow: 0 1px 2px rgba(20,20,40,0.05), 0 8px 24px rgba(20,20,40,0.05);
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -33,160 +71,204 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    transition: background-color .25s, color .25s;
   }
   a { color: inherit; }
-  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
   img { max-width: 100%; display: block; }
 
   /* ---------- nav ---------- */
   header.nav {
-    position: sticky; top: 0; z-index: 20;
-    background: rgba(13,13,18,0.82);
-    backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 30;
+    background: var(--nav-bg);
+    backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
   }
-  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; text-decoration: none; }
-  .brand svg { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; }
-  .nav-links { display: flex; align-items: center; gap: 28px; font-size: 14px; color: var(--muted); }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; gap: 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; text-decoration: none; flex-shrink: 0; }
+  .brand svg { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; }
+  .nav-links { display: flex; align-items: center; gap: 30px; font-size: 14.5px; color: var(--muted); }
   .nav-links a { text-decoration: none; transition: color .15s; }
   .nav-links a:hover { color: var(--fg); }
-  .nav-cta { display: flex; align-items: center; gap: 14px; }
-  .icon-link { display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: 8px; color: var(--muted); transition: all .15s; }
+  .nav-cta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .icon-link { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 9px; color: var(--muted); transition: all .15s; cursor: pointer; background: transparent; border: none; }
   .icon-link:hover { color: var(--fg); background: var(--secondary); }
-  .nav-toggle { display: none; }
+
+  /* lang switch */
+  .lang-switch { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 9px; overflow: hidden; }
+  .lang-switch button { background: transparent; border: none; color: var(--muted); font-size: 13px; font-weight: 600; padding: 6px 10px; cursor: pointer; transition: all .15s; font-family: inherit; }
+  .lang-switch button.active { background: var(--primary); color: var(--primary-fg); }
+  .lang-switch button:not(.active):hover { color: var(--fg); }
+
+  /* theme toggle icon swap */
+  [data-theme="dark"] .ico-moon { display: none; }
+  [data-theme="light"] .ico-sun { display: none; }
 
   /* ---------- buttons ---------- */
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: all .15s; white-space: nowrap; }
-  .btn-primary { background: var(--primary); color: #fff; }
-  .btn-primary:hover { background: var(--primary-hover); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 24px; border-radius: 11px; font-size: 15px; font-weight: 600; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: all .15s; white-space: nowrap; font-family: inherit; }
+  .btn-primary { background: var(--primary); color: var(--primary-fg); }
+  .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
   .btn-outline { background: transparent; border-color: var(--border-strong); color: var(--fg); }
   .btn-outline:hover { background: var(--secondary); }
-  .btn-sm { padding: 8px 14px; font-size: 13px; }
+  .btn-sm { padding: 9px 16px; font-size: 13.5px; border-radius: 9px; }
 
   /* ---------- hero ---------- */
-  .hero { position: relative; padding: 88px 0 64px; overflow: hidden; }
+  .hero { position: relative; padding: 116px 0 88px; overflow: hidden; }
   .hero::before {
-    content: ""; position: absolute; top: -220px; left: 50%; transform: translateX(-50%);
-    width: 900px; height: 500px; border-radius: 50%;
-    background: radial-gradient(closest-side, rgba(147,98,244,0.28), transparent);
+    content: ""; position: absolute; top: -260px; left: 50%; transform: translateX(-50%);
+    width: 1000px; height: 560px; border-radius: 50%;
+    background: radial-gradient(closest-side, var(--glow), transparent);
     pointer-events: none;
   }
   .hero-inner { position: relative; text-align: center; }
   .eyebrow {
-    display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px;
-    background: var(--primary-soft); border: 1px solid rgba(147,98,244,0.35); color: var(--primary-hover);
-    font-size: 13px; font-weight: 600; margin-bottom: 24px;
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 999px;
+    background: var(--primary-soft); border: 1px solid var(--primary-soft); color: var(--primary-hover);
+    font-size: 13.5px; font-weight: 600; margin-bottom: 28px;
   }
-  h1 { font-size: 52px; line-height: 1.12; letter-spacing: -0.02em; margin: 0 0 20px; }
-  h1 .accent { background: linear-gradient(135deg, var(--primary-hover), #ec4899); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .hero p.sub { max-width: 620px; margin: 0 auto 36px; color: var(--muted); font-size: 18px; }
-  .cta-row { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
-  .cta-row .btn { min-width: 200px; }
-  .cta-note { font-size: 13px; color: var(--muted); margin-bottom: 56px; }
+  h1 { font-size: 62px; line-height: 1.08; letter-spacing: -0.025em; margin: 0 0 24px; font-weight: 800; }
+  h1 .accent { background: linear-gradient(120deg, var(--primary-hover), #ec4899); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.sub { max-width: 640px; margin: 0 auto 40px; color: var(--muted); font-size: 19px; line-height: 1.6; }
+  .cta-row { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .cta-row .btn { min-width: 210px; }
+  .cta-note { font-size: 13.5px; color: var(--muted); margin-bottom: 68px; }
   .cta-note .version-tag { color: var(--fg); font-weight: 600; }
+  .cta-note a { color: var(--muted); text-decoration: underline; }
 
-  .hero-shot { position: relative; max-width: 860px; margin: 0 auto; }
-  .hero-shot img { width: 100%; border-radius: 20px; }
+  .hero-shot { position: relative; max-width: 940px; margin: 0 auto; }
+  .hero-shot img { width: 100%; border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shot-shadow); }
 
   /* ---------- section shells ---------- */
-  section { padding: 88px 0; }
+  section { padding: 116px 0; }
   section.alt { background: var(--bg-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .section-head { text-align: center; max-width: 620px; margin: 0 auto 56px; }
-  .kicker { color: var(--primary-hover); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
-  h2 { font-size: 34px; letter-spacing: -0.01em; margin: 0 0 14px; }
-  .section-head p { color: var(--muted); font-size: 16px; margin: 0; }
+  .section-head { text-align: center; max-width: 680px; margin: 0 auto 72px; }
+  .kicker { color: var(--primary-hover); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+  h2 { font-size: 42px; line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 18px; font-weight: 800; }
+  .section-head p { color: var(--muted); font-size: 18px; margin: 0; line-height: 1.6; }
 
-  /* ---------- feature strip ---------- */
-  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-  .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
-  .feature-card .ico { width: 44px; height: 44px; border-radius: 12px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; color: var(--primary-hover); margin-bottom: 18px; }
-  .feature-card h3 { font-size: 17px; margin: 0 0 8px; }
-  .feature-card p { font-size: 14.5px; color: var(--muted); margin: 0; }
+  /* ---------- feature strip (why) ---------- */
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 36px; box-shadow: var(--card-shadow); }
+  .feature-card .ico { width: 52px; height: 52px; border-radius: 14px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; color: var(--primary-hover); margin-bottom: 22px; }
+  .feature-card h3 { font-size: 20px; margin: 0 0 10px; }
+  .feature-card p { font-size: 15.5px; color: var(--muted); margin: 0; line-height: 1.65; }
 
-  /* ---------- use cases ---------- */
-  .usecase-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-  .usecase-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; transition: border-color .15s, transform .15s; }
-  .usecase-card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
-  .usecase-card .ico { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-  .usecase-card h3 { font-size: 16px; margin: 0 0 8px; }
-  .usecase-card p { font-size: 13.5px; color: var(--muted); margin: 0; line-height: 1.6; }
+  /* ---------- formats ---------- */
+  .usecase-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .usecase-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 30px; transition: border-color .15s, transform .15s; box-shadow: var(--card-shadow); }
+  .usecase-card:hover { border-color: var(--border-strong); transform: translateY(-3px); }
+  .usecase-card .ico { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+  .usecase-card h3 { font-size: 18px; margin: 0 0 10px; }
+  .usecase-card p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.65; }
+
+  /* ---------- deep-dive rows ---------- */
+  .deepdives { display: flex; flex-direction: column; gap: 128px; }
+  .dd { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+  .dd:nth-child(even) .dd-text { order: 2; }
+  .dd-text .kicker { margin-bottom: 12px; }
+  .dd-text h3 { font-size: 30px; line-height: 1.2; letter-spacing: -0.015em; margin: 0 0 16px; font-weight: 700; }
+  .dd-text > p { color: var(--muted); font-size: 17px; line-height: 1.65; margin: 0 0 24px; }
+  .dd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
+  .dd-list li { display: flex; align-items: flex-start; gap: 11px; font-size: 15.5px; color: var(--fg-soft); }
+  .dd-list svg { flex-shrink: 0; margin-top: 3px; color: var(--primary-hover); }
+
+  /* screenshot frame + placeholder */
+  .shot { position: relative; border-radius: 18px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shot-shadow); aspect-ratio: 16 / 10; background: var(--card); }
+  .shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+  .shot-ph { position: absolute; inset: 0; z-index: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center;
+    background:
+      radial-gradient(circle at 30% 20%, var(--primary-soft), transparent 60%),
+      var(--card); }
+  .shot-ph .ph-ico { width: 52px; height: 52px; border-radius: 14px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; color: var(--primary-hover); }
+  .shot-ph .ph-label { font-size: 14px; font-weight: 600; color: var(--muted); }
+  .shot-ph code { font-size: 12px; color: var(--primary-hover); background: var(--primary-soft); padding: 4px 10px; border-radius: 6px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+  /* ---------- "and more" grid ---------- */
+  .more-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .more-card { padding: 28px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); box-shadow: var(--card-shadow); }
+  .more-card .ico { width: 40px; height: 40px; border-radius: 10px; background: var(--primary-soft); color: var(--primary-hover); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .more-card h3 { font-size: 16.5px; margin: 0 0 8px; }
+  .more-card p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.6; }
 
   /* ---------- steps ---------- */
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; counter-reset: step; }
-  .step { position: relative; padding-left: 52px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; counter-reset: step; }
+  .step { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 48px 40px; box-shadow: var(--card-shadow); }
   .step::before {
     counter-increment: step; content: counter(step);
-    position: absolute; left: 0; top: 0; width: 36px; height: 36px; border-radius: 10px;
-    background: var(--primary); color: #fff; font-weight: 700; font-size: 15px;
     display: flex; align-items: center; justify-content: center;
+    width: 54px; height: 54px; border-radius: 16px; margin-bottom: 26px;
+    background: var(--primary); color: var(--primary-fg); font-weight: 700; font-size: 23px;
   }
-  .step h3 { font-size: 16px; margin: 8px 0 8px; }
-  .step p { font-size: 14px; color: var(--muted); margin: 0; }
+  .step h3 { font-size: 21px; margin: 0 0 12px; }
+  .step p { font-size: 15.5px; color: var(--muted); margin: 0; line-height: 1.7; }
 
   /* ---------- open source split ---------- */
-  .split { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items: center; }
+  .split { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 80px; align-items: center; }
   .split h2 { text-align: left; }
-  .split p { color: var(--muted); font-size: 16px; margin: 0 0 16px; }
-  .check-list { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 12px; }
-  .check-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--fg); }
-  .check-list svg { flex-shrink: 0; margin-top: 2px; color: var(--emerald); }
-  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
-  .stat-row { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
+  .split > div > p { color: var(--muted); font-size: 18px; margin: 0 0 18px; line-height: 1.7; }
+  .check-list { list-style: none; margin: 34px 0 0; padding: 0; display: grid; gap: 18px; }
+  .check-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 16.5px; color: var(--fg-soft); }
+  .check-list svg { flex-shrink: 0; margin-top: 3px; color: var(--emerald); }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 20px 44px; box-shadow: var(--card-shadow); }
+  .stat-row { display: flex; align-items: baseline; justify-content: space-between; padding: 26px 0; border-bottom: 1px solid var(--border); }
   .stat-row:last-child { border-bottom: none; }
-  .stat-row .label { color: var(--muted); font-size: 14px; }
-  .stat-row .value { font-size: 20px; font-weight: 700; }
-  .stat-row .value.stars-value::before { content: "⭐ "; }
+  .stat-row .label { color: var(--muted); font-size: 15px; }
+  .stat-row .value { font-size: 23px; font-weight: 700; }
+  .stat-row .value.stars-value::before { content: "★ "; color: #f5b301; }
 
   /* ---------- faq ---------- */
-  .faq-list { max-width: 760px; margin: 0 auto; display: grid; gap: 12px; }
-  details { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 4px 22px; }
+  .faq-list { max-width: 800px; margin: 0 auto; display: grid; gap: 14px; }
+  details { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 4px 24px; box-shadow: var(--card-shadow); }
   details[open] { border-color: var(--border-strong); }
-  summary { cursor: pointer; padding: 18px 0; font-size: 15.5px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  summary { cursor: pointer; padding: 20px 0; font-size: 16.5px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
   summary::-webkit-details-marker { display: none; }
-  summary::after { content: "+"; font-size: 20px; font-weight: 400; color: var(--muted); flex-shrink: 0; transition: transform .2s; }
+  summary::after { content: "+"; font-size: 22px; font-weight: 400; color: var(--muted); flex-shrink: 0; transition: transform .2s; }
   details[open] summary::after { content: "\2212"; }
-  details p { color: var(--muted); font-size: 14.5px; margin: -4px 0 18px; padding-right: 24px; }
+  details p { color: var(--muted); font-size: 15px; margin: -4px 0 20px; padding-right: 24px; line-height: 1.65; }
+  details p a { color: var(--primary-hover); }
 
   /* ---------- final cta ---------- */
   .final-cta { text-align: center; }
-  .final-cta h2 { margin-bottom: 12px; }
-  .final-cta p { color: var(--muted); margin: 0 0 32px; }
+  .final-cta h2 { margin-bottom: 14px; }
+  .final-cta > .wrap > p { color: var(--muted); font-size: 18px; margin: 0 0 36px; }
 
   /* ---------- footer ---------- */
-  footer { border-top: 1px solid var(--border); padding: 56px 0 32px; }
-  .footer-grid { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 32px; margin-bottom: 40px; }
-  .footer-brand .brand { margin-bottom: 12px; }
-  .footer-brand p { color: var(--muted); font-size: 13.5px; max-width: 260px; margin: 0; }
-  .footer-col h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 0 0 14px; }
-  .footer-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-  .footer-col a { color: var(--fg); text-decoration: none; font-size: 14px; opacity: 0.85; }
+  footer { border-top: 1px solid var(--border); padding: 64px 0 36px; }
+  .footer-grid { display: grid; grid-template-columns: 1.6fr repeat(3, 1fr); gap: 40px; margin-bottom: 48px; }
+  .footer-brand .brand { margin-bottom: 14px; }
+  .footer-brand p { color: var(--muted); font-size: 14px; max-width: 280px; margin: 0; line-height: 1.65; }
+  .footer-col h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0 0 16px; }
+  .footer-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+  .footer-col a { color: var(--fg); text-decoration: none; font-size: 14.5px; opacity: 0.82; }
   .footer-col a:hover { opacity: 1; color: var(--primary-hover); }
-  .footer-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 24px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); flex-wrap: wrap; gap: 12px; }
+  .footer-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 28px; border-top: 1px solid var(--border); font-size: 13.5px; color: var(--muted); flex-wrap: wrap; gap: 12px; }
 
-  @media (max-width: 860px) {
-    h1 { font-size: 38px; }
-    .hero p.sub { font-size: 16px; }
-    .feature-grid, .usecase-grid { grid-template-columns: repeat(2, 1fr); }
-    .steps { grid-template-columns: 1fr; gap: 24px; }
-    .split { grid-template-columns: 1fr; gap: 32px; }
+  /* ---------- responsive (desktop-first; graceful narrow fallback) ---------- */
+  @media (max-width: 940px) {
+    h1 { font-size: 44px; }
+    h2 { font-size: 34px; }
+    .hero p.sub { font-size: 17px; }
+    .feature-grid, .usecase-grid, .more-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps { grid-template-columns: 1fr; gap: 28px; }
+    .dd { grid-template-columns: 1fr; gap: 32px; }
+    .dd:nth-child(even) .dd-text { order: 0; }
+    .deepdives { gap: 80px; }
+    .split { grid-template-columns: 1fr; gap: 40px; }
     .split h2 { text-align: center; }
-    .split p { text-align: center; }
-    .check-list { max-width: 420px; margin-left: auto; margin-right: auto; }
+    .split > div > p { text-align: center; }
+    .check-list { max-width: 460px; margin-left: auto; margin-right: auto; }
     .footer-grid { grid-template-columns: repeat(2, 1fr); }
     .nav-links { display: none; }
   }
-  .br-desktop { display: none; }
-  @media (min-width: 640px) { .br-desktop { display: block; } }
-
   @media (max-width: 560px) {
-    .wrap { padding: 0 18px; }
-    h1 { font-size: 30px; }
-    h2 { font-size: 26px; }
-    .feature-grid, .usecase-grid { grid-template-columns: 1fr; }
+    .wrap { padding: 0 20px; }
+    h1 { font-size: 34px; }
+    h2 { font-size: 28px; }
+    section { padding: 72px 0; }
+    .feature-grid, .usecase-grid, .more-grid { grid-template-columns: 1fr; }
     .cta-row .btn { width: 100%; }
     .footer-grid { grid-template-columns: 1fr; }
-    section { padding: 64px 0; }
+    .brand span { display: none; }
   }
 </style>
 </head>
@@ -199,19 +281,27 @@
         <rect width="200" height="200" rx="44" fill="#9362f4"/>
         <path d="M 73,50 L 122.5,50 A 12.5,12.5 0 0,1 122.5,75 L 95,75 L 95,84 Q 95,90 101,90 L 102.5,90 A 12.5,12.5 0 0,1 102.5,115 L 95,115 L 95,142 Q 95,150 87,150 L 73,150 Q 65,150 65,142 L 65,58 Q 65,50 73,50 Z" fill="#fff"/>
       </svg>
-      Formatif
+      <span>Formatif</span>
     </a>
     <nav class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#how-it-works">How it works</a>
-      <a href="#open-source">Open source</a>
-      <a href="#faq">FAQ</a>
+      <a href="#features" data-i18n="nav.features">Features</a>
+      <a href="#how-it-works" data-i18n="nav.how">How it works</a>
+      <a href="#open-source" data-i18n="nav.opensource">Open source</a>
+      <a href="#faq" data-i18n="nav.faq">FAQ</a>
     </nav>
     <div class="nav-cta">
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button data-lang="en">EN</button>
+        <button data-lang="zh">中文</button>
+      </div>
+      <button class="icon-link" id="theme-toggle" aria-label="Toggle theme" data-i18n-attr="aria-label:toggle.theme">
+        <svg class="ico-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="ico-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      </button>
       <a class="icon-link" href="https://github.com/aeroray/Formatif" aria-label="GitHub" target="_blank" rel="noopener">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.11 3.06.74.8 1.19 1.83 1.19 3.09 0 4.43-2.69 5.4-5.25 5.69.41.36.78 1.06.78 2.15 0 1.55-.01 2.8-.01 3.18 0 .31.21.67.8.56A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
       </a>
-      <a class="btn btn-primary btn-sm" href="https://github.com/aeroray/Formatif/releases/latest" target="_blank" rel="noopener">Download</a>
+      <a class="btn btn-primary btn-sm" href="https://github.com/aeroray/Formatif/releases/latest" target="_blank" rel="noopener" data-i18n="nav.download">Download</a>
     </div>
   </div>
 </header>
@@ -219,16 +309,16 @@
 <main id="top">
   <section class="hero">
     <div class="wrap hero-inner">
-      <span class="eyebrow">🎉 Free forever &middot; MIT licensed</span>
-      <h1>Compress images, video, GIFs<br class="br-desktop"> and PDFs — <span class="accent">100% local.</span></h1>
-      <p class="sub">No uploads, no account, no subscription. Batch-compress your files in seconds, right on your own machine — free and open source.</p>
+      <span class="eyebrow" data-i18n="hero.eyebrow">🎉 Free forever · MIT licensed</span>
+      <h1 data-i18n-html="hero.title">Compress images, video, GIFs<br class="br-desktop"> and PDFs — <span class="accent">100% local.</span></h1>
+      <p class="sub" data-i18n="hero.sub">No uploads, no account, no subscription. Batch-compress your files in seconds, right on your own machine — free and open source.</p>
       <div class="cta-row">
-        <a id="dl-windows" class="btn btn-primary" href="https://github.com/aeroray/Formatif/releases/latest" target="_blank" rel="noopener">⬇ Download for Windows</a>
-        <a id="dl-mac" class="btn btn-outline" href="https://github.com/aeroray/Formatif/releases/latest" target="_blank" rel="noopener">⬇ Download for macOS</a>
+        <a id="dl-windows" class="btn btn-primary" href="https://github.com/aeroray/Formatif/releases/latest" target="_blank" rel="noopener" data-i18n="hero.dlWin">⬇ Download for Windows</a>
+        <a id="dl-mac" class="btn btn-outline" href="https://github.com/aeroray/Formatif/releases/latest" target="_blank" rel="noopener" data-i18n="hero.dlMac">⬇ Download for macOS</a>
       </div>
-      <p class="cta-note">Latest version <span class="version-tag">—</span> &middot; <a href="https://github.com/aeroray/Formatif" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline;">view source on GitHub</a></p>
+      <p class="cta-note"><span data-i18n="hero.versionPrefix">Latest version</span> <span class="version-tag">—</span> · <a href="https://github.com/aeroray/Formatif" target="_blank" rel="noopener" data-i18n="hero.viewSource">view source on GitHub</a></p>
       <div class="hero-shot">
-        <img src="assets/app-preview.svg" alt="Formatif compressing a batch of images, video, GIF and PDF files" width="860" height="727">
+        <img src="assets/shot-preview.webp" alt="Formatif app screenshot" data-i18n-attr="alt:hero.imgAlt" width="1000" height="765">
       </div>
     </div>
   </section>
@@ -236,25 +326,25 @@
   <section id="features">
     <div class="wrap">
       <div class="section-head">
-        <div class="kicker">Why Formatif</div>
-        <h2>Built for privacy and speed</h2>
-        <p>Everything you need to shrink files, nothing you don't.</p>
+        <div class="kicker" data-i18n="why.kicker">Why Formatif</div>
+        <h2 data-i18n="why.title">Built for privacy and speed</h2>
+        <p data-i18n="why.sub">Everything you need to shrink files, nothing you don't.</p>
       </div>
       <div class="feature-grid">
         <div class="feature-card">
-          <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><path d="m16 8-8.5 8.5"/><path d="M2 22l4-4"/></svg></div>
-          <h3>Free &amp; open source</h3>
-          <p>MIT licensed. No license key, no paywall, no telemetry — the source is right there on GitHub.</p>
+          <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><path d="m16 8-8.5 8.5"/><path d="M2 22l4-4"/></svg></div>
+          <h3 data-i18n="why.free.t">Free &amp; open source</h3>
+          <p data-i18n="why.free.d">MIT licensed. No license key, no paywall, no telemetry — the source is right there on GitHub.</p>
         </div>
         <div class="feature-card">
-          <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-          <h3>Private by design</h3>
-          <p>Every file is processed locally with bundled ffmpeg, qpdf and gifsicle. Nothing ever leaves your machine.</p>
+          <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <h3 data-i18n="why.private.t">Private by design</h3>
+          <p data-i18n="why.private.d">Every file is processed locally with bundled ffmpeg, qpdf and gifsicle. Nothing ever leaves your machine.</p>
         </div>
         <div class="feature-card">
-          <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8z"/></svg></div>
-          <h3>Batch &amp; fast</h3>
-          <p>Drop single files or whole folders and compress everything in parallel. Watch folders for hands-free automation.</p>
+          <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8z"/></svg></div>
+          <h3 data-i18n="why.batch.t">Batch &amp; fast</h3>
+          <p data-i18n="why.batch.d">Drop single files or whole folders and compress everything in parallel. Watch folders for hands-free automation.</p>
         </div>
       </div>
     </div>
@@ -263,30 +353,30 @@
   <section class="alt">
     <div class="wrap">
       <div class="section-head">
-        <div class="kicker">One app, four formats</div>
-        <h2>Whatever you need to shrink</h2>
-        <p>Each category gets its own quality, resolution and format controls.</p>
+        <div class="kicker" data-i18n="formats.kicker">One app, four formats</div>
+        <h2 data-i18n="formats.title">Whatever you need to shrink</h2>
+        <p data-i18n="formats.sub">Each category gets its own quality, resolution and format controls.</p>
       </div>
       <div class="usecase-grid">
         <div class="usecase-card">
-          <div class="ico" style="background:rgba(251,146,60,0.15);color:#fb923c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div>
-          <h3>Image</h3>
-          <p>JPEG, PNG, WebP, AVIF, ICO. Also decodes HEIC, PSD, SVG, TIFF, BMP and JPEG-2000 on the way in.</p>
+          <div class="ico" style="background:rgba(251,146,60,0.15);color:#fb923c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div>
+          <h3 data-i18n="formats.image.t">Image</h3>
+          <p data-i18n="formats.image.d">JPEG, PNG, WebP, AVIF, ICO. Also decodes HEIC, PSD, SVG, TIFF, BMP and JPEG-2000 on the way in.</p>
         </div>
         <div class="usecase-card">
-          <div class="ico" style="background:rgba(139,92,246,0.15);color:#8b5cf6;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg></div>
-          <h3>Video</h3>
-          <p>MP4, WebM, MOV, MKV, AVI, WMV, FLV, M4V, 3GP — or extract the audio to MP3, AAC, WAV, FLAC.</p>
+          <div class="ico" style="background:rgba(139,92,246,0.15);color:#8b5cf6;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg></div>
+          <h3 data-i18n="formats.video.t">Video</h3>
+          <p data-i18n="formats.video.d">MP4, WebM, MOV, MKV, AVI, WMV, FLV, M4V, 3GP — or extract the audio to MP3, AAC, WAV, FLAC.</p>
         </div>
         <div class="usecase-card">
-          <div class="ico" style="background:rgba(244,63,94,0.15);color:#f43f5e;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M8 3v18M2 9h20M2 15h20"/></svg></div>
-          <h3>GIF</h3>
-          <p>Re-encode to MP4, WebM or WebP, or keep it a GIF and let gifsicle's lossy compression do the work.</p>
+          <div class="ico" style="background:rgba(244,63,94,0.15);color:#f43f5e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M8 3v18M2 9h20M2 15h20"/></svg></div>
+          <h3 data-i18n="formats.gif.t">GIF</h3>
+          <p data-i18n="formats.gif.d">Re-encode to MP4, WebM or WebP, or keep it a GIF and let gifsicle's lossy compression do the work.</p>
         </div>
         <div class="usecase-card">
-          <div class="ico" style="background:rgba(14,165,233,0.15);color:#0ea5e9;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
-          <h3>PDF</h3>
-          <p>Lossless structural recompression with qpdf, plus optional image downsampling for image-heavy PDFs.</p>
+          <div class="ico" style="background:rgba(14,165,233,0.15);color:#0ea5e9;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+          <h3 data-i18n="formats.pdf.t">PDF</h3>
+          <p data-i18n="formats.pdf.d">Lossless structural recompression with qpdf, plus optional image downsampling for image-heavy PDFs.</p>
         </div>
       </div>
     </div>
@@ -295,22 +385,164 @@
   <section id="how-it-works">
     <div class="wrap">
       <div class="section-head">
-        <div class="kicker">How it works</div>
-        <h2>Three steps, zero uploads</h2>
-        <p>No wizards, no cloud round-trip — just drop and go.</p>
+        <div class="kicker" data-i18n="dd.kicker">A closer look</div>
+        <h2 data-i18n="dd.title">Powerful, without the busywork</h2>
+        <p data-i18n="dd.sub">From a single screenshot to a whole export folder — Formatif keeps it simple.</p>
+      </div>
+
+      <div class="deepdives">
+        <!-- 1. batch -->
+        <div class="dd">
+          <div class="dd-text">
+            <div class="kicker" data-i18n="dd.batch.kicker">Batch processing</div>
+            <h3 data-i18n="dd.batch.title">Drop a file, or a whole folder</h3>
+            <p data-i18n="dd.batch.desc">Formatif expands folders, sorts everything into the right category, and compresses in parallel. Thumbnails, progress and final savings show up per file.</p>
+            <ul class="dd-list">
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.batch.li1">Drag &amp; drop files or entire folders</span></li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.batch.li2">Compresses everything in parallel</span></li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.batch.li3">Live per-file progress &amp; results</span></li>
+            </ul>
+          </div>
+          <div class="shot">
+            <img src="assets/shot-batch.webp" alt="Batch file grid" data-i18n-attr="alt:dd.batch.title" loading="lazy" onerror="this.style.display='none'">
+            <div class="shot-ph">
+              <div class="ph-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+              <span class="ph-label" data-i18n="ph.label">Screenshot placeholder</span>
+              <code>assets/shot-batch.webp</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. controls -->
+        <div class="dd">
+          <div class="dd-text">
+            <div class="kicker" data-i18n="dd.controls.kicker">Full control</div>
+            <h3 data-i18n="dd.controls.title">Quality, resolution, format — your call</h3>
+            <p data-i18n="dd.controls.desc">Pick a quality preset from Original down to Low, scale resolution to 25%, and choose the output format per category. Need one file to be different? Override just that file.</p>
+            <ul class="dd-list">
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.controls.li1">5 quality presets, per category</span></li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.controls.li2">Scale resolution 100% → 25%</span></li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.controls.li3">Per-file overrides when you need them</span></li>
+            </ul>
+          </div>
+          <div class="shot">
+            <img src="assets/shot-controls.webp" alt="Compression controls" data-i18n-attr="alt:dd.controls.title" loading="lazy" onerror="this.style.display='none'">
+            <div class="shot-ph">
+              <div class="ph-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div>
+              <span class="ph-label" data-i18n="ph.label">Screenshot placeholder</span>
+              <code>assets/shot-controls.webp</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. compare -->
+        <div class="dd">
+          <div class="dd-text">
+            <div class="kicker" data-i18n="dd.compare.kicker">See the difference</div>
+            <h3 data-i18n="dd.compare.title">Compare before and after</h3>
+            <p data-i18n="dd.compare.desc">A side-by-side slider shows exactly what changed — for images, video, GIF and PDF alike. Check the quality before you keep the result.</p>
+            <ul class="dd-list">
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.compare.li1">Side-by-side before/after slider</span></li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.compare.li2">Works for every format</span></li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.compare.li3">Exact size savings, per file</span></li>
+            </ul>
+          </div>
+          <div class="shot">
+            <img src="assets/shot-compare.webp" alt="Before/after compare" data-i18n-attr="alt:dd.compare.title" loading="lazy" onerror="this.style.display='none'">
+            <div class="shot-ph">
+              <div class="ph-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><rect x="3" y="6" width="6" height="12" rx="1"/><rect x="15" y="8" width="6" height="8" rx="1"/></svg></div>
+              <span class="ph-label" data-i18n="ph.label">Screenshot placeholder</span>
+              <code>assets/shot-compare.webp</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. watch -->
+        <div class="dd">
+          <div class="dd-text">
+            <div class="kicker" data-i18n="dd.watch.kicker">Automation</div>
+            <h3 data-i18n="dd.watch.title">Watch folders, compress automatically</h3>
+            <p data-i18n="dd.watch.desc">Point Formatif at a folder and it compresses anything dropped in — perfect for a screenshots folder, an export directory, or your downloads.</p>
+            <ul class="dd-list">
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.watch.li1">Auto-compress files on drop</span></li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.watch.li2">A preset per watched folder</span></li>
+              <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="dd.watch.li3">Runs quietly in the background</span></li>
+            </ul>
+          </div>
+          <div class="shot">
+            <img src="assets/shot-watch.webp" alt="Folder monitoring" data-i18n-attr="alt:dd.watch.title" loading="lazy" onerror="this.style.display='none'">
+            <div class="shot-ph">
+              <div class="ph-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div>
+              <span class="ph-label" data-i18n="ph.label">Screenshot placeholder</span>
+              <code>assets/shot-watch.webp</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker" data-i18n="more.kicker">And more</div>
+        <h2 data-i18n="more.title">Thoughtful details throughout</h2>
+        <p data-i18n="more.sub">The small things that make it a joy to use every day.</p>
+      </div>
+      <div class="more-grid">
+        <div class="more-card">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></div>
+          <h3 data-i18n="more.presets.t">Presets</h3>
+          <p data-i18n="more.presets.d">Save named presets for the way you like to compress, switch in one click, and keep a read-only default as your baseline.</p>
+        </div>
+        <div class="more-card">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></div>
+          <h3 data-i18n="more.output.t">Output options</h3>
+          <p data-i18n="more.output.d">Name-template output files, drop them next to the source or a chosen folder, delete originals, or preserve file timestamps.</p>
+        </div>
+        <div class="more-card">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2v-1c0-1.1.9-2 2-2h1c1.1 0 2-.9 2-2a10 10 0 0 0-9-11Z"/></svg></div>
+          <h3 data-i18n="more.accents.t">7 accent colors</h3>
+          <p data-i18n="more.accents.d">A focused, distraction-free dark UI with seven accent colors — plus a light theme, so it matches your setup.</p>
+        </div>
+        <div class="more-card">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div>
+          <h3 data-i18n="more.bilingual.t">Bilingual</h3>
+          <p data-i18n="more.bilingual.d">English and 简体中文, auto-selected from your system language and switchable any time.</p>
+        </div>
+        <div class="more-card">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg></div>
+          <h3 data-i18n="more.input.t">Broad input support</h3>
+          <p data-i18n="more.input.d">Reads HEIC, PSD, SVG, TIFF, BMP and JPEG-2000 images, plus legacy video containers like MPG, TS and OGV.</p>
+        </div>
+        <div class="more-card">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <h3 data-i18n="more.bundled.t">Everything bundled</h3>
+          <p data-i18n="more.bundled.d">ffmpeg, qpdf and gifsicle ship inside the installer — nothing downloads on first run, and it still fits in ~34 MB.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="steps-section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker" data-i18n="steps.kicker">How it works</div>
+        <h2 data-i18n="steps.title">Three steps, zero uploads</h2>
+        <p data-i18n="steps.sub">No wizards, no cloud round-trip — just drop and go.</p>
       </div>
       <div class="steps">
         <div class="step">
-          <h3>Drop your files</h3>
-          <p>Drag in files or entire folders. Formatif sorts them into images, video, GIFs and PDFs automatically.</p>
+          <h3 data-i18n="steps.1.t">Drop your files</h3>
+          <p data-i18n="steps.1.d">Drag in files or entire folders. Formatif sorts them into images, video, GIFs and PDFs automatically.</p>
         </div>
         <div class="step">
-          <h3>Pick quality &amp; format</h3>
-          <p>Use the built-in preset or dial in your own quality, resolution and output format per category — or per file.</p>
+          <h3 data-i18n="steps.2.t">Pick quality &amp; format</h3>
+          <p data-i18n="steps.2.d">Use the built-in preset or dial in your own quality, resolution and output format per category — or per file.</p>
         </div>
         <div class="step">
-          <h3>Get compressed output</h3>
-          <p>ffmpeg, qpdf and gifsicle do the work locally. Compare before/after and see exactly what you saved.</p>
+          <h3 data-i18n="steps.3.t">Get compressed output</h3>
+          <p data-i18n="steps.3.d">ffmpeg, qpdf and gifsicle do the work locally. Compare before/after and see exactly what you saved.</p>
         </div>
       </div>
     </div>
@@ -319,21 +551,21 @@
   <section class="alt" id="open-source">
     <div class="wrap split">
       <div>
-        <div class="kicker">No catch</div>
-        <h2>Free and open source, actually</h2>
-        <p>Formatif isn't a free trial of a paid app. It's MIT-licensed, the full source is on GitHub, and it always will be.</p>
+        <div class="kicker" data-i18n="os.kicker">No catch</div>
+        <h2 data-i18n="os.title">Free and open source, actually</h2>
+        <p data-i18n="os.desc">Formatif isn't a free trial of a paid app. It's MIT-licensed, the full source is on GitHub, and it always will be.</p>
         <ul class="check-list">
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> No subscription, no license key, ever</li>
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Zero telemetry — nothing phones home</li>
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Inspect or fork every line of the source</li>
-          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Issues and PRs welcome on GitHub</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="os.li1">No subscription, no license key, ever</span></li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="os.li2">Zero telemetry — nothing phones home</span></li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="os.li3">Inspect or fork every line of the source</span></li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="os.li4">Issues and PRs welcome on GitHub</span></li>
         </ul>
       </div>
       <div class="stat-card">
-        <div class="stat-row"><span class="label">License</span><span class="value">MIT</span></div>
-        <div class="stat-row"><span class="label">Latest release</span><span class="value version-tag">—</span></div>
-        <div class="stat-row"><span class="label">GitHub stars</span><span class="value stars-value" id="stars-value">—</span></div>
-        <div class="stat-row"><span class="label">Built with</span><span class="value">Tauri + Rust</span></div>
+        <div class="stat-row"><span class="label" data-i18n="os.stat.license">License</span><span class="value">MIT</span></div>
+        <div class="stat-row"><span class="label" data-i18n="os.stat.release">Latest release</span><span class="value version-tag">—</span></div>
+        <div class="stat-row"><span class="label" data-i18n="os.stat.stars">GitHub stars</span><span class="value stars-value" id="stars-value">—</span></div>
+        <div class="stat-row"><span class="label" data-i18n="os.stat.built">Built with</span><span class="value">Tauri + Rust</span></div>
       </div>
     </div>
   </section>
@@ -341,45 +573,45 @@
   <section id="faq">
     <div class="wrap">
       <div class="section-head">
-        <div class="kicker">FAQ</div>
-        <h2>Good to know</h2>
+        <div class="kicker" data-i18n="faq.kicker">FAQ</div>
+        <h2 data-i18n="faq.title">Good to know</h2>
       </div>
       <div class="faq-list">
         <details open>
-          <summary>Is Formatif really free?</summary>
-          <p>Yes. Formatif is MIT-licensed and free forever — no paywall, no license key, no in-app upsells.</p>
+          <summary data-i18n="faq.q1">Is Formatif really free?</summary>
+          <p data-i18n="faq.a1">Yes. Formatif is MIT-licensed and free forever — no paywall, no license key, no in-app upsells.</p>
         </details>
         <details>
-          <summary>Does my data ever leave my computer?</summary>
-          <p>No. Every compression job runs locally through the bundled ffmpeg, qpdf and gifsicle binaries. Nothing is uploaded, and Formatif doesn't collect telemetry.</p>
+          <summary data-i18n="faq.q2">Does my data ever leave my computer?</summary>
+          <p data-i18n="faq.a2">No. Every compression job runs locally through the bundled ffmpeg, qpdf and gifsicle binaries. Nothing is uploaded, and Formatif doesn't collect telemetry.</p>
         </details>
         <details>
-          <summary>Why does macOS say Formatif is "from an unidentified developer"?</summary>
-          <p>The macOS build isn't code-signed yet (no Apple Developer certificate), so Gatekeeper quarantines it after download. Right-click the app → Open → confirm, or run <code>xattr -rd com.apple.quarantine /Applications/Formatif.app</code> once in Terminal. Notarization is on the roadmap.</p>
+          <summary data-i18n="faq.q3">Why does macOS say Formatif is "from an unidentified developer"?</summary>
+          <p data-i18n-html="faq.a3">The macOS build isn't code-signed yet (no Apple Developer certificate), so Gatekeeper quarantines it after download. Right-click the app → Open → confirm, or run <code>xattr -rd com.apple.quarantine /Applications/Formatif.app</code> once in Terminal. Notarization is on the roadmap.</p>
         </details>
         <details>
-          <summary>What's actually inside the installer?</summary>
-          <p>ffmpeg, qpdf and gifsicle, bundled as separate executables — nothing downloads on first run. ffmpeg and gifsicle are GPL-licensed, qpdf is Apache-2.0; Formatif's own code stays MIT.</p>
+          <summary data-i18n="faq.q4">What's actually inside the installer?</summary>
+          <p data-i18n="faq.a4">ffmpeg, qpdf and gifsicle, bundled as separate executables — nothing downloads on first run. ffmpeg and gifsicle are GPL-licensed, qpdf is Apache-2.0; Formatif's own code stays MIT.</p>
         </details>
         <details>
-          <summary>Which platforms are supported?</summary>
-          <p>Windows 10/11 and macOS on Apple Silicon today. Intel Mac support and a signed/notarized macOS build are on the roadmap.</p>
+          <summary data-i18n="faq.q5">Which platforms are supported?</summary>
+          <p data-i18n="faq.a5">Windows 10/11 and macOS on Apple Silicon today. Intel Mac support and a signed/notarized macOS build are on the roadmap.</p>
         </details>
         <details>
-          <summary>Can I contribute or report a bug?</summary>
-          <p>Please do — Formatif is open source. File issues or pull requests on <a href="https://github.com/aeroray/Formatif" target="_blank" rel="noopener" style="color:var(--primary-hover);">GitHub</a>.</p>
+          <summary data-i18n="faq.q6">Can I contribute or report a bug?</summary>
+          <p data-i18n-html="faq.a6">Please do — Formatif is open source. File issues or pull requests on <a href="https://github.com/aeroray/Formatif" target="_blank" rel="noopener">GitHub</a>.</p>
         </details>
       </div>
     </div>
   </section>
 
-  <section class="alt final-cta">
+  <section class="final-cta">
     <div class="wrap">
-      <h2>Ready to shrink your files?</h2>
-      <p>Download Formatif and compress your first batch in under a minute.</p>
+      <h2 data-i18n="cta.title">Ready to shrink your files?</h2>
+      <p data-i18n="cta.sub">Download Formatif and compress your first batch in under a minute.</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="https://github.com/aeroray/Formatif/releases/latest" target="_blank" rel="noopener">⬇ Download the latest release</a>
-        <a class="btn btn-outline" href="https://github.com/aeroray/Formatif" target="_blank" rel="noopener">View on GitHub</a>
+        <a class="btn btn-primary" href="https://github.com/aeroray/Formatif/releases/latest" target="_blank" rel="noopener" data-i18n="cta.download">⬇ Download the latest release</a>
+        <a class="btn btn-outline" href="https://github.com/aeroray/Formatif" target="_blank" rel="noopener" data-i18n="cta.github">View on GitHub</a>
       </div>
     </div>
   </section>
@@ -394,42 +626,222 @@
             <rect width="200" height="200" rx="44" fill="#9362f4"/>
             <path d="M 73,50 L 122.5,50 A 12.5,12.5 0 0,1 122.5,75 L 95,75 L 95,84 Q 95,90 101,90 L 102.5,90 A 12.5,12.5 0 0,1 102.5,115 L 95,115 L 95,142 Q 95,150 87,150 L 73,150 Q 65,150 65,142 L 65,58 Q 65,50 73,50 Z" fill="#fff"/>
           </svg>
-          Formatif
+          <span>Formatif</span>
         </a>
-        <p>Free, open-source, 100% local media compression for Windows and macOS.</p>
+        <p data-i18n="footer.tagline">Free, open-source, 100% local media compression for Windows and macOS.</p>
       </div>
       <div class="footer-col">
-        <h4>Product</h4>
+        <h4 data-i18n="footer.product">Product</h4>
         <ul>
-          <li><a href="#features">Features</a></li>
-          <li><a href="#how-it-works">How it works</a></li>
-          <li><a href="https://github.com/aeroray/Formatif/releases/latest" target="_blank" rel="noopener">Changelog</a></li>
+          <li><a href="#features" data-i18n="footer.features">Features</a></li>
+          <li><a href="#how-it-works" data-i18n="footer.how">How it works</a></li>
+          <li><a href="https://github.com/aeroray/Formatif/releases/latest" target="_blank" rel="noopener" data-i18n="footer.changelog">Changelog</a></li>
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Resources</h4>
+        <h4 data-i18n="footer.resources">Resources</h4>
         <ul>
-          <li><a href="https://github.com/aeroray/Formatif#readme" target="_blank" rel="noopener">Documentation</a></li>
-          <li><a href="https://github.com/aeroray/Formatif/issues" target="_blank" rel="noopener">Report an issue</a></li>
-          <li><a href="https://github.com/aeroray/Formatif" target="_blank" rel="noopener">Source code</a></li>
+          <li><a href="https://github.com/aeroray/Formatif#readme" target="_blank" rel="noopener" data-i18n="footer.docs">Documentation</a></li>
+          <li><a href="https://github.com/aeroray/Formatif/issues" target="_blank" rel="noopener" data-i18n="footer.issue">Report an issue</a></li>
+          <li><a href="https://github.com/aeroray/Formatif" target="_blank" rel="noopener" data-i18n="footer.source">Source code</a></li>
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Legal</h4>
+        <h4 data-i18n="footer.legal">Legal</h4>
         <ul>
-          <li><a href="https://github.com/aeroray/Formatif/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+          <li><a href="https://github.com/aeroray/Formatif/blob/main/LICENSE" target="_blank" rel="noopener" data-i18n="footer.license">MIT License</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>&copy; 2026 Formatif. Built with Tauri.</span>
-      <span>Made for people who just want smaller files.</span>
+      <span data-i18n="footer.copyright">© 2026 Formatif. Built with Tauri.</span>
+      <span data-i18n="footer.madefor">Made for people who just want smaller files.</span>
     </div>
   </div>
 </footer>
 
 <script>
 (function () {
+  // ---------- i18n dictionary ----------
+  var I18N = {
+    en: {
+      "meta.title": "Formatif — free, open-source, local media compression",
+      "meta.desc": "Compress images, video, GIFs and PDFs — free, open source, 100% local. No uploads, no account, no subscription.",
+      "nav.features": "Features", "nav.how": "How it works", "nav.opensource": "Open source", "nav.faq": "FAQ", "nav.download": "Download",
+      "toggle.theme": "Toggle theme",
+      "hero.eyebrow": "🎉 Free forever · MIT licensed",
+      "hero.title": "Compress images, video, GIFs<br class=\"br-desktop\"> and PDFs — <span class=\"accent\">100% local.</span>",
+      "hero.sub": "No uploads, no account, no subscription. Batch-compress your files in seconds, right on your own machine — free and open source.",
+      "hero.dlWin": "⬇ Download for Windows", "hero.dlMac": "⬇ Download for macOS",
+      "hero.versionPrefix": "Latest version", "hero.viewSource": "view source on GitHub",
+      "hero.imgAlt": "Formatif app screenshot",
+      "why.kicker": "Why Formatif", "why.title": "Built for privacy and speed", "why.sub": "Everything you need to shrink files, nothing you don't.",
+      "why.free.t": "Free & open source", "why.free.d": "MIT licensed. No license key, no paywall, no telemetry — the source is right there on GitHub.",
+      "why.private.t": "Private by design", "why.private.d": "Every file is processed locally with bundled ffmpeg, qpdf and gifsicle. Nothing ever leaves your machine.",
+      "why.batch.t": "Batch & fast", "why.batch.d": "Drop single files or whole folders and compress everything in parallel. Watch folders for hands-free automation.",
+      "formats.kicker": "One app, four formats", "formats.title": "Whatever you need to shrink", "formats.sub": "Each category gets its own quality, resolution and format controls.",
+      "formats.image.t": "Image", "formats.image.d": "JPEG, PNG, WebP, AVIF, ICO. Also decodes HEIC, PSD, SVG, TIFF, BMP and JPEG-2000 on the way in.",
+      "formats.video.t": "Video", "formats.video.d": "MP4, WebM, MOV, MKV, AVI, WMV, FLV, M4V, 3GP — or extract the audio to MP3, AAC, WAV, FLAC.",
+      "formats.gif.t": "GIF", "formats.gif.d": "Re-encode to MP4, WebM or WebP, or keep it a GIF and let gifsicle's lossy compression do the work.",
+      "formats.pdf.t": "PDF", "formats.pdf.d": "Lossless structural recompression with qpdf, plus optional image downsampling for image-heavy PDFs.",
+      "dd.kicker": "A closer look", "dd.title": "Powerful, without the busywork", "dd.sub": "From a single screenshot to a whole export folder — Formatif keeps it simple.",
+      "ph.label": "Screenshot placeholder",
+      "dd.batch.kicker": "Batch processing", "dd.batch.title": "Drop a file, or a whole folder", "dd.batch.desc": "Formatif expands folders, sorts everything into the right category, and compresses in parallel. Thumbnails, progress and final savings show up per file.",
+      "dd.batch.li1": "Drag & drop files or entire folders", "dd.batch.li2": "Compresses everything in parallel", "dd.batch.li3": "Live per-file progress & results",
+      "dd.controls.kicker": "Full control", "dd.controls.title": "Quality, resolution, format — your call", "dd.controls.desc": "Pick a quality preset from Original down to Low, scale resolution to 25%, and choose the output format per category. Need one file to be different? Override just that file.",
+      "dd.controls.li1": "5 quality presets, per category", "dd.controls.li2": "Scale resolution 100% → 25%", "dd.controls.li3": "Per-file overrides when you need them",
+      "dd.compare.kicker": "See the difference", "dd.compare.title": "Compare before and after", "dd.compare.desc": "A side-by-side slider shows exactly what changed — for images, video, GIF and PDF alike. Check the quality before you keep the result.",
+      "dd.compare.li1": "Side-by-side before/after slider", "dd.compare.li2": "Works for every format", "dd.compare.li3": "Exact size savings, per file",
+      "dd.watch.kicker": "Automation", "dd.watch.title": "Watch folders, compress automatically", "dd.watch.desc": "Point Formatif at a folder and it compresses anything dropped in — perfect for a screenshots folder, an export directory, or your downloads.",
+      "dd.watch.li1": "Auto-compress files on drop", "dd.watch.li2": "A preset per watched folder", "dd.watch.li3": "Runs quietly in the background",
+      "more.kicker": "And more", "more.title": "Thoughtful details throughout", "more.sub": "The small things that make it a joy to use every day.",
+      "more.presets.t": "Presets", "more.presets.d": "Save named presets for the way you like to compress, switch in one click, and keep a read-only default as your baseline.",
+      "more.output.t": "Output options", "more.output.d": "Name-template output files, drop them next to the source or a chosen folder, delete originals, or preserve file timestamps.",
+      "more.accents.t": "7 accent colors", "more.accents.d": "A focused, distraction-free dark UI with seven accent colors — plus a light theme, so it matches your setup.",
+      "more.bilingual.t": "Bilingual", "more.bilingual.d": "English and 简体中文, auto-selected from your system language and switchable any time.",
+      "more.input.t": "Broad input support", "more.input.d": "Reads HEIC, PSD, SVG, TIFF, BMP and JPEG-2000 images, plus legacy video containers like MPG, TS and OGV.",
+      "more.bundled.t": "Everything bundled", "more.bundled.d": "ffmpeg, qpdf and gifsicle ship inside the installer — nothing downloads on first run, and it still fits in ~34 MB.",
+      "steps.kicker": "How it works", "steps.title": "Three steps, zero uploads", "steps.sub": "No wizards, no cloud round-trip — just drop and go.",
+      "steps.1.t": "Drop your files", "steps.1.d": "Drag in files or entire folders. Formatif sorts them into images, video, GIFs and PDFs automatically.",
+      "steps.2.t": "Pick quality & format", "steps.2.d": "Use the built-in preset or dial in your own quality, resolution and output format per category — or per file.",
+      "steps.3.t": "Get compressed output", "steps.3.d": "ffmpeg, qpdf and gifsicle do the work locally. Compare before/after and see exactly what you saved.",
+      "os.kicker": "No catch", "os.title": "Free and open source, actually", "os.desc": "Formatif isn't a free trial of a paid app. It's MIT-licensed, the full source is on GitHub, and it always will be.",
+      "os.li1": "No subscription, no license key, ever", "os.li2": "Zero telemetry — nothing phones home", "os.li3": "Inspect or fork every line of the source", "os.li4": "Issues and PRs welcome on GitHub",
+      "os.stat.license": "License", "os.stat.release": "Latest release", "os.stat.stars": "GitHub stars", "os.stat.built": "Built with",
+      "faq.kicker": "FAQ", "faq.title": "Good to know",
+      "faq.q1": "Is Formatif really free?", "faq.a1": "Yes. Formatif is MIT-licensed and free forever — no paywall, no license key, no in-app upsells.",
+      "faq.q2": "Does my data ever leave my computer?", "faq.a2": "No. Every compression job runs locally through the bundled ffmpeg, qpdf and gifsicle binaries. Nothing is uploaded, and Formatif doesn't collect telemetry.",
+      "faq.q3": "Why does macOS say Formatif is \"from an unidentified developer\"?", "faq.a3": "The macOS build isn't code-signed yet (no Apple Developer certificate), so Gatekeeper quarantines it after download. Right-click the app → Open → confirm, or run <code>xattr -rd com.apple.quarantine /Applications/Formatif.app</code> once in Terminal. Notarization is on the roadmap.",
+      "faq.q4": "What's actually inside the installer?", "faq.a4": "ffmpeg, qpdf and gifsicle, bundled as separate executables — nothing downloads on first run. ffmpeg and gifsicle are GPL-licensed, qpdf is Apache-2.0; Formatif's own code stays MIT.",
+      "faq.q5": "Which platforms are supported?", "faq.a5": "Windows 10/11 and macOS on Apple Silicon today. Intel Mac support and a signed/notarized macOS build are on the roadmap.",
+      "faq.q6": "Can I contribute or report a bug?", "faq.a6": "Please do — Formatif is open source. File issues or pull requests on <a href=\"https://github.com/aeroray/Formatif\" target=\"_blank\" rel=\"noopener\">GitHub</a>.",
+      "cta.title": "Ready to shrink your files?", "cta.sub": "Download Formatif and compress your first batch in under a minute.",
+      "cta.download": "⬇ Download the latest release", "cta.github": "View on GitHub",
+      "footer.tagline": "Free, open-source, 100% local media compression for Windows and macOS.",
+      "footer.product": "Product", "footer.resources": "Resources", "footer.legal": "Legal",
+      "footer.features": "Features", "footer.how": "How it works", "footer.changelog": "Changelog",
+      "footer.docs": "Documentation", "footer.issue": "Report an issue", "footer.source": "Source code", "footer.license": "MIT License",
+      "footer.copyright": "© 2026 Formatif. Built with Tauri.", "footer.madefor": "Made for people who just want smaller files."
+    },
+    zh: {
+      "meta.title": "Formatif —— 免费、开源、本地运行的媒体压缩工具",
+      "meta.desc": "压缩图片、视频、GIF 和 PDF —— 免费、开源、100% 本地。无需上传、无需账号、无需订阅。",
+      "nav.features": "功能", "nav.how": "如何运作", "nav.opensource": "开源", "nav.faq": "常见问题", "nav.download": "下载",
+      "toggle.theme": "切换主题",
+      "hero.eyebrow": "🎉 永久免费 · MIT 开源",
+      "hero.title": "压缩图片、视频、GIF<br class=\"br-desktop\"> 和 PDF —— <span class=\"accent\">100% 本地。</span>",
+      "hero.sub": "无需上传、无需账号、无需订阅。就在你自己的电脑上，几秒钟批量压缩文件 —— 免费且开源。",
+      "hero.dlWin": "⬇ 下载 Windows 版", "hero.dlMac": "⬇ 下载 macOS 版",
+      "hero.versionPrefix": "最新版本", "hero.viewSource": "在 GitHub 查看源码",
+      "hero.imgAlt": "Formatif 应用截图",
+      "why.kicker": "为什么选 Formatif", "why.title": "为隐私与速度而生", "why.sub": "压缩文件所需的一切，没有多余的东西。",
+      "why.free.t": "免费且开源", "why.free.d": "MIT 许可证。无需激活码、无付费墙、无遥测采集 —— 源码就在 GitHub 上。",
+      "why.private.t": "隐私优先", "why.private.d": "所有文件都通过打包的 ffmpeg、qpdf、gifsicle 在本地处理，绝不离开你的电脑。",
+      "why.batch.t": "批量且快速", "why.batch.d": "拖入单个文件或整个文件夹，并行压缩全部内容。还能监听文件夹，实现全自动处理。",
+      "formats.kicker": "一个应用，四种格式", "formats.title": "你需要压缩的一切", "formats.sub": "每种类别都有独立的质量、分辨率和格式设置。",
+      "formats.image.t": "图片", "formats.image.d": "JPEG、PNG、WebP、AVIF、ICO。还可解码 HEIC、PSD、SVG、TIFF、BMP、JPEG-2000 作为输入。",
+      "formats.video.t": "视频", "formats.video.d": "MP4、WebM、MOV、MKV、AVI、WMV、FLV、M4V、3GP —— 或提取音频为 MP3、AAC、WAV、FLAC。",
+      "formats.gif.t": "GIF", "formats.gif.d": "转码为 MP4、WebM 或 WebP，或保持 GIF 格式，交由 gifsicle 进行有损压缩。",
+      "formats.pdf.t": "PDF", "formats.pdf.d": "使用 qpdf 进行无损结构重压缩，图片较多的 PDF 还可选择降采样其中的图片。",
+      "dd.kicker": "细看一下", "dd.title": "功能强大，却不繁琐", "dd.sub": "从一张截图到整个导出文件夹 —— Formatif 都能轻松搞定。",
+      "ph.label": "截图占位（待补充）",
+      "dd.batch.kicker": "批量处理", "dd.batch.title": "拖入一个文件，或整个文件夹", "dd.batch.desc": "Formatif 会自动展开文件夹、把每个文件归类，并行压缩。每个文件都有缩略图、进度和最终节省的体积。",
+      "dd.batch.li1": "拖入文件或整个文件夹", "dd.batch.li2": "并行压缩全部内容", "dd.batch.li3": "实时显示每个文件的进度与结果",
+      "dd.controls.kicker": "完全掌控", "dd.controls.title": "质量、分辨率、格式 —— 由你决定", "dd.controls.desc": "从「原始」到「低」选择质量档位，分辨率可缩小至 25%，并为每种类别选择输出格式。个别文件需要不同设置时，可单独覆盖。",
+      "dd.controls.li1": "5 档质量预设，按类别设置", "dd.controls.li2": "分辨率 100% → 25% 缩放", "dd.controls.li3": "需要时可单独覆盖某个文件",
+      "dd.compare.kicker": "所见即所得", "dd.compare.title": "压缩前后对比", "dd.compare.desc": "并排滑块直观展示变化 —— 图片、视频、GIF、PDF 都支持。保留结果之前，先确认画质。",
+      "dd.compare.li1": "并排前后对比滑块", "dd.compare.li2": "支持所有格式", "dd.compare.li3": "精确显示每个文件节省的体积",
+      "dd.watch.kicker": "自动化", "dd.watch.title": "监听文件夹，自动压缩", "dd.watch.desc": "指定一个文件夹，任何拖入其中的文件都会被自动压缩 —— 非常适合截图文件夹、导出目录或下载文件夹。",
+      "dd.watch.li1": "拖入即自动压缩", "dd.watch.li2": "每个监听文件夹可指定预设", "dd.watch.li3": "在后台安静运行",
+      "more.kicker": "还有更多", "more.title": "处处用心的细节", "more.sub": "正是这些小细节，让它每天用起来都顺手。",
+      "more.presets.t": "预设", "more.presets.d": "为常用的压缩方式创建命名预设，一键切换，并保留一个只读的默认预设作为基准。",
+      "more.output.t": "输出选项", "more.output.d": "用命名模板生成输出文件，可放在源文件旁或指定文件夹，可删除原文件，或保留文件的时间戳。",
+      "more.accents.t": "7 种强调色", "more.accents.d": "专注、无干扰的深色界面，提供七种强调色 —— 还有浅色主题，与你的系统相得益彰。",
+      "more.bilingual.t": "中英双语", "more.bilingual.d": "English 与简体中文，根据系统语言自动选择，也可随时切换。",
+      "more.input.t": "广泛的输入支持", "more.input.d": "可读取 HEIC、PSD、SVG、TIFF、BMP、JPEG-2000 图片，以及 MPG、TS、OGV 等旧版视频容器。",
+      "more.bundled.t": "开箱即用", "more.bundled.d": "ffmpeg、qpdf、gifsicle 都打包在安装包内 —— 首次运行无需下载，安装包仍只有约 34 MB。",
+      "steps.kicker": "如何运作", "steps.title": "三步搞定，无需上传", "steps.sub": "没有向导，没有云端往返 —— 拖入即用。",
+      "steps.1.t": "拖入文件", "steps.1.d": "拖入文件或整个文件夹。Formatif 会自动归类为图片、视频、GIF 和 PDF。",
+      "steps.2.t": "选择质量与格式", "steps.2.d": "使用内置预设，或为每种类别（乃至每个文件）自定义质量、分辨率和输出格式。",
+      "steps.3.t": "获得压缩结果", "steps.3.d": "ffmpeg、qpdf、gifsicle 在本地完成工作。对比压缩前后，精确查看节省的体积。",
+      "os.kicker": "没有套路", "os.title": "真正的免费开源", "os.desc": "Formatif 不是付费软件的试用版。它采用 MIT 许可证，完整源码就在 GitHub 上，并将永远如此。",
+      "os.li1": "永远没有订阅、没有激活码", "os.li2": "零遥测 —— 不会偷偷上传任何数据", "os.li3": "可查阅或 fork 每一行源码", "os.li4": "欢迎在 GitHub 提 issue 和 PR",
+      "os.stat.license": "许可证", "os.stat.release": "最新版本", "os.stat.stars": "GitHub 星标", "os.stat.built": "技术栈",
+      "faq.kicker": "常见问题", "faq.title": "你可能想知道",
+      "faq.q1": "Formatif 真的免费吗？", "faq.a1": "是的。Formatif 采用 MIT 许可证，永久免费 —— 没有付费墙、没有激活码、没有应用内推销。",
+      "faq.q2": "我的数据会离开电脑吗？", "faq.a2": "不会。每一次压缩都通过打包的 ffmpeg、qpdf、gifsicle 在本地完成。不上传任何内容，Formatif 也不采集遥测数据。",
+      "faq.q3": "为什么 macOS 提示 Formatif「来自身份不明的开发者」？", "faq.a3": "macOS 版本目前还没有代码签名（尚无 Apple 开发者证书），因此下载后会被 Gatekeeper 加上隔离标记。右键点击应用 → 打开 → 确认，或在终端中执行一次 <code>xattr -rd com.apple.quarantine /Applications/Formatif.app</code>。公证（notarization）已在路线图中。",
+      "faq.q4": "安装包里到底装了什么？", "faq.a4": "ffmpeg、qpdf、gifsicle，作为独立可执行文件打包 —— 首次运行不下载任何东西。ffmpeg 和 gifsicle 采用 GPL 许可证，qpdf 为 Apache-2.0；Formatif 自身代码仍为 MIT。",
+      "faq.q5": "支持哪些平台？", "faq.a5": "目前支持 Windows 10/11 和 Apple Silicon 版 macOS。Intel Mac 支持以及签名/公证的 macOS 版本已在路线图中。",
+      "faq.q6": "我可以参与贡献或反馈 bug 吗？", "faq.a6": "非常欢迎 —— Formatif 是开源项目。请在 <a href=\"https://github.com/aeroray/Formatif\" target=\"_blank\" rel=\"noopener\">GitHub</a> 提交 issue 或 pull request。",
+      "cta.title": "准备好压缩你的文件了吗？", "cta.sub": "下载 Formatif，一分钟内完成第一批压缩。",
+      "cta.download": "⬇ 下载最新版本", "cta.github": "在 GitHub 查看",
+      "footer.tagline": "免费、开源、100% 本地的媒体压缩工具，支持 Windows 和 macOS。",
+      "footer.product": "产品", "footer.resources": "资源", "footer.legal": "法律",
+      "footer.features": "功能", "footer.how": "如何运作", "footer.changelog": "更新日志",
+      "footer.docs": "文档", "footer.issue": "反馈问题", "footer.source": "源代码", "footer.license": "MIT 许可证",
+      "footer.copyright": "© 2026 Formatif · 基于 Tauri 构建。", "footer.madefor": "为只想把文件变小的人而做。"
+    }
+  };
+
+  // ---------- language ----------
+  function detectLang() {
+    try {
+      var saved = localStorage.getItem("formatif-lang");
+      if (saved === "en" || saved === "zh") return saved;
+    } catch (e) {}
+    var nav = (navigator.language || "en").toLowerCase();
+    return nav.indexOf("zh") === 0 ? "zh" : "en";
+  }
+
+  function applyLang(lang) {
+    var dict = I18N[lang] || I18N.en;
+    document.documentElement.lang = (lang === "zh" ? "zh-CN" : "en");
+    document.title = dict["meta.title"];
+    document.querySelectorAll("[data-i18n]").forEach(function (el) {
+      var v = dict[el.getAttribute("data-i18n")];
+      if (v != null) el.textContent = v;
+    });
+    document.querySelectorAll("[data-i18n-html]").forEach(function (el) {
+      var v = dict[el.getAttribute("data-i18n-html")];
+      if (v != null) el.innerHTML = v;
+    });
+    document.querySelectorAll("[data-i18n-attr]").forEach(function (el) {
+      el.getAttribute("data-i18n-attr").split(";").forEach(function (pair) {
+        var idx = pair.indexOf(":");
+        if (idx < 0) return;
+        var attr = pair.slice(0, idx).trim();
+        var key = pair.slice(idx + 1).trim();
+        var v = dict[key];
+        if (v != null) el.setAttribute(attr, v);
+      });
+    });
+    document.querySelectorAll(".lang-switch button").forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-lang") === lang);
+    });
+  }
+
+  var currentLang = detectLang();
+  applyLang(currentLang);
+  document.querySelectorAll(".lang-switch button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      currentLang = b.getAttribute("data-lang");
+      try { localStorage.setItem("formatif-lang", currentLang); } catch (e) {}
+      applyLang(currentLang);
+    });
+  });
+
+  // ---------- theme ----------
+  var themeToggle = document.getElementById("theme-toggle");
+  if (themeToggle) {
+    themeToggle.addEventListener("click", function () {
+      var next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", next);
+      try { localStorage.setItem("formatif-theme", next); } catch (e) {}
+    });
+  }
+
+  // ---------- platform-aware download emphasis ----------
   var isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
   var winBtn = document.getElementById("dl-windows");
   var macBtn = document.getElementById("dl-mac");
@@ -438,6 +850,7 @@
     macBtn.classList.remove("btn-outline"); macBtn.classList.add("btn-primary");
   }
 
+  // ---------- live release + stars from GitHub ----------
   fetch("https://api.github.com/repos/aeroray/Formatif/releases/latest")
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
