@@ -193,14 +193,6 @@ src-tauri/src/
 - HEIC/HEIF input, "Target size" mode, clipboard output, jobs history.
 - Code-signed & notarized macOS build; Intel Mac support.
 
-
-
-## Support the project
-
-Formatif is free and always will be. If it saves you time, a tip is welcome but never required.
-
-
-
 ## License
 
 [MIT](LICENSE)

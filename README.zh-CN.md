@@ -153,14 +153,6 @@ src-tauri/src/
 - HEIC/HEIF 输入、「目标大小」模式、剪贴板输出、任务历史记录。
 - 对 macOS 构建进行代码签名与 notarization；支持 Intel Mac。
 
-
-
-## 赞赏支持
-
-Formatif 免费且永远免费。如果它帮你节省了时间，欢迎扫码赞赏——但这从来不是必须的。
-
-
-
 ## 许可证
 
 [MIT](LICENSE)
